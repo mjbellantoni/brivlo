@@ -1,0 +1,28 @@
+<p><a href="/board">&larr; Back to board</a></p>
+<h2><%= instance %></h2>
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Event</th>
+      <th>Host</th>
+      <th>Card</th>
+      <th>Skill</th>
+      <th>Tool</th>
+      <th>Summary</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% events.each do |evt| %>
+      <tr class="<%= evt[:event]&.start_with?('wait.') ? 'waiting' : '' %>">
+        <td><%= relative_time(evt[:ts]) %></td>
+        <td><%= evt[:event] %></td>
+        <td><%= evt[:host] %></td>
+        <td><%= evt[:card] %></td>
+        <td><%= evt[:skill] %></td>
+        <td><%= evt[:tool] %></td>
+        <td><%= evt[:summary] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

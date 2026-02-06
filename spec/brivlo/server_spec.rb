@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "json"
+require "securerandom"
 require "rack/test"
 require "brivlo/server"
 
@@ -92,6 +93,169 @@ RSpec.describe Brivlo::Server do
       expect(stored[:tool]).to eq("Bash")
       expect(stored[:summary]).to eq("Needs approval")
       expect(stored[:received_at]).not_to be_nil
+    end
+  end
+
+  describe "GET /board" do
+    before do
+      Brivlo::Database.setup(db)
+    end
+
+    let(:now) { Time.now.utc }
+
+    def insert_event(overrides = {})
+      defaults = {
+        event_id: SecureRandom.uuid,
+        ts: now.iso8601,
+        event: "task.start",
+        instance: "wt-a",
+        host: "mjb-dev-01",
+        received_at: now.iso8601
+      }
+      db[:events].insert(defaults.merge(overrides))
+    end
+
+    it "renders an HTML page" do
+      get "/board"
+
+      expect(last_response.status).to eq(200)
+      expect(last_response.content_type).to include("text/html")
+    end
+
+    it "shows instance status rows" do
+      insert_event(instance: "wt-a", event: "task.start")
+
+      get "/board"
+
+      expect(last_response.body).to include("wt-a")
+      expect(last_response.body).to include("mjb-dev-01")
+    end
+
+    it "shows waiting status for wait.* events" do
+      insert_event(instance: "wt-a", event: "wait.permission", tool: "Bash", summary: "Needs approval")
+
+      get "/board"
+
+      expect(last_response.body).to include("waiting")
+      expect(last_response.body).to include("Bash")
+      expect(last_response.body).to include("Needs approval")
+    end
+
+    it "shows active status for non-wait events" do
+      insert_event(instance: "wt-b", event: "task.start")
+
+      get "/board"
+
+      expect(last_response.body).to include("active")
+    end
+
+    it "uses the latest event per instance for status" do
+      insert_event(instance: "wt-a", event: "wait.permission", ts: (now - 60).iso8601)
+      insert_event(instance: "wt-a", event: "task.start", ts: now.iso8601)
+
+      get "/board"
+
+      # Latest is task.start, so should be active, not waiting
+      expect(last_response.body).to include("active")
+    end
+
+    it "sorts waiting instances first" do
+      insert_event(instance: "wt-active", event: "task.start", ts: now.iso8601)
+      insert_event(instance: "wt-waiting", event: "wait.permission", ts: (now - 30).iso8601)
+
+      get "/board"
+
+      body = last_response.body
+      waiting_pos = body.index("wt-waiting")
+      active_pos = body.index("wt-active")
+      expect(waiting_pos).to be < active_pos
+    end
+
+    it "includes auto-refresh meta tag" do
+      get "/board"
+
+      expect(last_response.body).to include('http-equiv="refresh"')
+    end
+
+    it "links instance names to detail pages" do
+      insert_event(instance: "wt-a", event: "task.start")
+
+      get "/board"
+
+      expect(last_response.body).to include('href="/board/wt-a"')
+    end
+
+    describe "top wait reasons" do
+      it "shows wait reasons grouped by event and tool" do
+        3.times { insert_event(event: "wait.permission", tool: "Bash") }
+        insert_event(event: "wait.permission", tool: "Edit")
+
+        get "/board"
+
+        expect(last_response.body).to include("Top Wait Reasons")
+        expect(last_response.body).to include("wait.permission")
+      end
+
+      it "shows counts for each wait reason" do
+        3.times { insert_event(event: "wait.permission", tool: "Bash") }
+
+        get "/board"
+
+        expect(last_response.body).to include("3")
+      end
+    end
+  end
+
+  describe "GET /board/:instance" do
+    before { Brivlo::Database.setup(db) }
+
+    let(:now) { Time.now.utc }
+
+    def insert_event(overrides = {})
+      defaults = {
+        event_id: SecureRandom.uuid,
+        ts: now.iso8601,
+        event: "task.start",
+        instance: "wt-a",
+        host: "mjb-dev-01",
+        received_at: now.iso8601
+      }
+      db[:events].insert(defaults.merge(overrides))
+    end
+
+    it "shows event history for the instance" do
+      insert_event(instance: "wt-a", event: "task.start", ts: (now - 60).iso8601)
+      insert_event(instance: "wt-a", event: "wait.permission", ts: now.iso8601)
+      insert_event(instance: "wt-b", event: "task.start")
+
+      get "/board/wt-a"
+
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to include("wt-a")
+      expect(last_response.body).to include("task.start")
+      expect(last_response.body).to include("wait.permission")
+      expect(last_response.body).not_to include("wt-b")
+    end
+
+    it "limits to last 50 events" do
+      55.times do |i|
+        insert_event(instance: "wt-a", event: "task.#{i}", ts: (now - (55 - i)).iso8601)
+      end
+
+      get "/board/wt-a"
+
+      expect(last_response.body).not_to include("task.0")
+      expect(last_response.body).to include("task.54")
+    end
+
+    it "orders events most recent first" do
+      insert_event(instance: "wt-a", event: "first", ts: (now - 60).iso8601)
+      insert_event(instance: "wt-a", event: "second", ts: now.iso8601)
+
+      get "/board/wt-a"
+
+      body = last_response.body
+      expect(body.index("second")).to be < body.index("first")
     end
   end
 end

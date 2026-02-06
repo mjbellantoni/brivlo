@@ -1,0 +1,51 @@
+<h2>Instances</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Instance</th>
+      <th>Host</th>
+      <th>Status</th>
+      <th>Event</th>
+      <th>Card</th>
+      <th>Tool</th>
+      <th>Summary</th>
+      <th>Last Seen</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% instances.each do |inst| %>
+      <tr class="<%= inst[:status] %>">
+        <td><a href="/board/<%= inst[:instance] %>"><%= inst[:instance] %></a></td>
+        <td><%= inst[:host] %></td>
+        <td><%= inst[:status] %></td>
+        <td><%= inst[:event] %></td>
+        <td><%= inst[:card] %></td>
+        <td><%= inst[:tool] %></td>
+        <td><%= inst[:summary] %></td>
+        <td><%= relative_time(inst[:ts]) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h2>Top Wait Reasons</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Reason</th>
+      <th>Tool</th>
+      <th>Count</th>
+      <th>Last Seen</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% wait_reasons.each do |wr| %>
+      <tr>
+        <td><%= wr[:event] %></td>
+        <td><%= wr[:tool] || "—" %></td>
+        <td><%= wr[:count] %></td>
+        <td><%= relative_time(wr[:last_seen]) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
