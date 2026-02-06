@@ -86,7 +86,7 @@ module Brivlo
 
       wait_reasons = @db[:events]
                      .where(Sequel.like(:event, "wait.%"))
-                     .select_group(:event, :tool)
+                     .select_group(:event, :tool, :summary)
                      .select_append { count.function.*.as(count) }
                      .select_append { max(ts).as(last_seen) }
                      .order(Sequel.desc(:count))

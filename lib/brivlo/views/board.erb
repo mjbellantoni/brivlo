@@ -34,6 +34,7 @@
     <tr>
       <th>Reason</th>
       <th>Tool</th>
+      <th>Summary</th>
       <th>Count</th>
       <th>Last Seen</th>
     </tr>
@@ -43,6 +44,7 @@
       <tr>
         <td><%= wr[:event] %></td>
         <td><%= wr[:tool] || "—" %></td>
+        <td><%= wr[:summary] || "—" %></td>
         <td><%= wr[:count] %></td>
         <td><%= relative_time(wr[:last_seen]) %></td>
       </tr>
