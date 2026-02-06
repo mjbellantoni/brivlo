@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require "brivlo/client"
+
+options = {}
+meta = {}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: brivlo_event <event> [options]"
+
+  opts.on("--instance INSTANCE", "Instance name (e.g. wt-a)") { |v| options[:instance] = v }
+  opts.on("--host HOST", "Host name") { |v| options[:host] = v }
+  opts.on("--card CARD", "Card/ticket number") { |v| options[:card] = v }
+  opts.on("--skill SKILL", "Skill name") { |v| options[:skill] = v }
+  opts.on("--tool TOOL", "Tool name") { |v| options[:tool] = v }
+  opts.on("--summary SUMMARY", "Event summary") { |v| options[:summary] = v }
+  opts.on("--meta K=V", "Metadata key=value (repeatable)") do |v|
+    key, value = v.split("=", 2)
+    meta[key] = value
+  end
+end
+
+parser.parse!
+
+event = ARGV.shift
+
+unless event
+  warn parser.help
+  exit 1
+end
+
+unless options[:instance] && options[:host]
+  warn "Error: --instance and --host are required"
+  warn parser.help
+  exit 1
+end
+
+options[:meta] = meta unless meta.empty?
+
+client = Brivlo::Client.new
+client.send_event(event: event, **options)
