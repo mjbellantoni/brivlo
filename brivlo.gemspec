@@ -27,7 +27,9 @@ Gem::Specification.new do |spec|
   spec.executables = %w[brivlo_event brivlo_server]
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "rackup", "~> 2.0"
   spec.add_dependency "sequel", "~> 5.0"
   spec.add_dependency "sinatra", "~> 4.0"
   spec.add_dependency "sqlite3", "~> 2.0"
+  spec.add_dependency "webrick", "~> 1.8"
 end

@@ -53,7 +53,8 @@ module Brivlo
       request["Authorization"] = "Bearer #{@token}"
       request.body = JSON.generate(payload)
 
-      http.request(request)
+      response = http.request(request)
+      warn "[brivlo] Server returned #{response.code}: #{response.body}" unless response.is_a?(Net::HTTPSuccess)
     end
 
     def build_http(uri)

@@ -49,8 +49,9 @@ module Brivlo
     end
 
     post "/events" do
-      request.body.rewind
-      data = JSON.parse(request.body.read)
+      body = request.body
+      body.rewind if body.respond_to?(:rewind)
+      data = JSON.parse(body.read)
 
       fields = {
         event_id: data["event_id"],

@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "brivlo/server"
+require "rackup/handler/webrick"
 
 port = Integer(ENV.fetch("PORT", 9292))
 db_path = ENV.fetch("BRIVLO_DB", File.join(Dir.pwd, "db", "brivlo.sqlite3"))
@@ -12,4 +13,4 @@ puts "Database: #{db_path}"
 db = Brivlo::Database.connect(db_path)
 app = Brivlo::Server.new(db: db)
 
-app.run!(port: port, server: "webrick")
+Rackup::Handler::WEBrick.run(app, Port: port)
