@@ -1,35 +1,60 @@
 # Brivlo
 
-TODO: Delete this and the text below, and describe your gem
+Tiny control plane for monitoring Claude Code instances across hosts. Collects events and displays a live dashboard showing instance status and top wait reasons.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/brivlo`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-## Installation
-
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
+## Setup
 
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+gem build brivlo.gemspec
+gem install brivlo-0.1.0.gem
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Or add to your Gemfile:
+
+```ruby
+gem "brivlo", git: "https://github.com/mjbellantoni/brivlo"
+```
+
+## Server
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+export BRIVLO_TOKEN=your-secret-token
+export PORT=9292                    # optional, default 9292
+export BRIVLO_DB=db/brivlo.sqlite3  # optional
+
+brivlo_server
 ```
 
-## Usage
+Open http://localhost:9292/board to view the dashboard.
 
-TODO: Write usage instructions here
+## Client
+
+```bash
+export BRIVLO_ENDPOINT=http://localhost:9292
+export BRIVLO_TOKEN=your-secret-token
+
+brivlo_event wait.permission \
+  --instance wt-a \
+  --host mjb-dev-01 \
+  --card 123 \
+  --tool Bash \
+  --summary "Needs approval for git push" \
+  --meta reason=destructive
+```
+
+The client fails open: if the server is unreachable, it warns to stderr and exits 0.
+
+## Endpoints
+
+- `GET /ping` — health check
+- `POST /events` — store an event (bearer auth required)
+- `GET /board` — live dashboard (auto-refreshes every 10s)
+- `GET /board/:instance` — event history for an instance
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/mjbellantoni/brivlo.
+```bash
+bundle install
+bundle exec rspec
+bundle exec rubocop
+```
