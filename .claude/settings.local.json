@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bundle exec rubocop:*)",
+      "Bash(git -C /Users/mjb/Dropbox/Development/brivlo status)",
+      "Bash(git -C /Users/mjb/Dropbox/Development/brivlo diff)",
+      "Bash(git -C /Users/mjb/Dropbox/Development/brivlo log --oneline -5)"
+    ]
+  }
+}
