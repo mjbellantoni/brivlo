@@ -4,14 +4,14 @@ Tiny control plane for monitoring Claude Code instances across hosts. Collects e
 
 ## Configuration
 
-Create `~/.brivlo.yml`:
+Create `.brivlo.yml` in the project directory or `~/.brivlo.yml`:
 
 ```yaml
 BRIVLO_ENDPOINT: https://your-subdomain.ngrok-free.app
 BRIVLO_TOKEN: your-secret-token
 ```
 
-All scripts read this file. Environment variables override file values.
+Project file takes priority over home. Environment variables override file values.
 
 ## Setup
 
