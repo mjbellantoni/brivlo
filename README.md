@@ -2,6 +2,17 @@
 
 Tiny control plane for monitoring Claude Code instances across hosts. Collects events and displays a live dashboard showing instance status and top wait reasons.
 
+## Configuration
+
+Create `~/.brivlo.yml`:
+
+```yaml
+BRIVLO_ENDPOINT: https://your-subdomain.ngrok-free.app
+BRIVLO_TOKEN: your-secret-token
+```
+
+All scripts read this file. Environment variables override file values.
+
 ## Setup
 
 ```bash
@@ -18,21 +29,22 @@ gem "brivlo", git: "https://github.com/mjbellantoni/brivlo"
 ## Server
 
 ```bash
-export BRIVLO_TOKEN=your-secret-token
-export PORT=9292                    # optional, default 9292
-export BRIVLO_DB=db/brivlo.sqlite3  # optional
-
 brivlo_server
 ```
 
+Optional env overrides: `PORT` (default 9292), `BRIVLO_DB` (default `db/brivlo.sqlite3`).
+
 Open http://localhost:9292/board to view the dashboard.
+
+To expose via ngrok:
+
+```bash
+bin/brivlo_ngrok
+```
 
 ## Client
 
 ```bash
-export BRIVLO_ENDPOINT=http://localhost:9292
-export BRIVLO_TOKEN=your-secret-token
-
 brivlo_event wait.permission \
   --instance wt-a \
   --host mjb-dev-01 \
