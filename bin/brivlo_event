@@ -2,7 +2,10 @@
 # frozen_string_literal: true
 
 require "optparse"
+require "brivlo/config"
 require "brivlo/client"
+
+Brivlo::Config.load
 
 options = {}
 meta = {}

@@ -2,21 +2,20 @@
 # frozen_string_literal: true
 
 require "uri"
-require "yaml"
+require "brivlo/config"
 
-config_file = File.join(Dir.home, ".brivlo.yml")
-config = File.exist?(config_file) ? YAML.load_file(config_file) : {}
+Brivlo::Config.load
 
-endpoint = config["BRIVLO_ENDPOINT"] || ENV["BRIVLO_ENDPOINT"]
+endpoint = Brivlo::Config.fetch("BRIVLO_ENDPOINT")
 
 unless endpoint
-  warn "Error: BRIVLO_ENDPOINT not set in #{config_file} or environment"
+  warn "Error: BRIVLO_ENDPOINT not set in ~/.brivlo.yml or environment"
   exit 1
 end
 
 uri = URI.parse(endpoint)
 ngrok_url = uri.host
-port = ENV.fetch("PORT", "9292")
+port = Brivlo::Config.fetch("PORT", "9292")
 
 puts "Starting ngrok for Brivlo"
 puts "  Tunnel: #{endpoint} -> localhost:#{port}"

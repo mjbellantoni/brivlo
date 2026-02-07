@@ -5,6 +5,7 @@ require "json"
 require "securerandom"
 require "uri"
 require "time"
+require_relative "config"
 
 module Brivlo
   # HTTP client for sending events to the Brivlo control plane.
@@ -13,8 +14,8 @@ module Brivlo
     TIMEOUT = 2
 
     def initialize
-      @endpoint = ENV.fetch("BRIVLO_ENDPOINT", nil)
-      @token = ENV.fetch("BRIVLO_TOKEN", nil)
+      @endpoint = Config.fetch("BRIVLO_ENDPOINT")
+      @token = Config.fetch("BRIVLO_TOKEN")
     end
 
     def send_event(event:, instance:, host:, **optional)

@@ -10,9 +10,9 @@ RSpec.describe Brivlo::Client do
   let(:token) { "test-token" }
 
   before do
-    allow(ENV).to receive(:fetch).and_call_original
-    allow(ENV).to receive(:fetch).with("BRIVLO_ENDPOINT", nil).and_return(endpoint)
-    allow(ENV).to receive(:fetch).with("BRIVLO_TOKEN", nil).and_return(token)
+    allow(Brivlo::Config).to receive(:fetch).and_call_original
+    allow(Brivlo::Config).to receive(:fetch).with("BRIVLO_ENDPOINT").and_return(endpoint)
+    allow(Brivlo::Config).to receive(:fetch).with("BRIVLO_TOKEN").and_return(token)
   end
 
   describe "#send_event" do
@@ -74,7 +74,7 @@ RSpec.describe Brivlo::Client do
     end
 
     it "no-ops silently when BRIVLO_ENDPOINT is not set" do
-      allow(ENV).to receive(:fetch).with("BRIVLO_ENDPOINT", nil).and_return(nil)
+      allow(Brivlo::Config).to receive(:fetch).with("BRIVLO_ENDPOINT").and_return(nil)
 
       client = described_class.new
 
@@ -101,7 +101,7 @@ RSpec.describe Brivlo::Client do
     end
 
     it "warns when BRIVLO_TOKEN is not set" do
-      allow(ENV).to receive(:fetch).with("BRIVLO_TOKEN", nil).and_return(nil)
+      allow(Brivlo::Config).to receive(:fetch).with("BRIVLO_TOKEN").and_return(nil)
 
       client = described_class.new
 

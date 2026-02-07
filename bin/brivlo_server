@@ -1,8 +1,11 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "brivlo/config"
 require "brivlo/server"
 require "rackup/handler/webrick"
+
+Brivlo::Config.load
 
 port = Integer(ENV.fetch("PORT", 9292))
 db_path = ENV.fetch("BRIVLO_DB", File.join(Dir.pwd, "db", "brivlo.sqlite3"))
