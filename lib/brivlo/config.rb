@@ -3,12 +3,16 @@
 require "yaml"
 
 module Brivlo
-  # Loads configuration from ~/.brivlo.yml, with ENV overrides.
+  # Loads configuration from .brivlo.yml (project, then home), with ENV overrides.
   module Config
-    CONFIG_FILE = File.join(Dir.home, ".brivlo.yml")
+    CONFIG_FILES = [
+      File.join(Dir.pwd, ".brivlo.yml"),
+      File.join(Dir.home, ".brivlo.yml")
+    ].freeze
 
     def self.load
-      file_config = File.exist?(CONFIG_FILE) ? YAML.load_file(CONFIG_FILE) : {}
+      path = CONFIG_FILES.find { |p| File.exist?(p) }
+      file_config = path ? YAML.load_file(path) : {}
 
       file_config.each do |key, value|
         ENV[key] ||= value.to_s
