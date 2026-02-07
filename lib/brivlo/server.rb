@@ -44,6 +44,10 @@ module Brivlo
       end
     end
 
+    get "/" do
+      redirect "/board"
+    end
+
     get "/ping" do
       "ok"
     end
