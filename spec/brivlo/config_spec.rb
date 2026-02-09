@@ -34,6 +34,28 @@ RSpec.describe Brivlo::Config do
 
       expect(result).to eq({})
     end
+
+    it "sets BRIVLO_INSTANCE to current directory name when not configured" do
+      allow(File).to receive(:exist?).and_return(false)
+      ENV.delete("BRIVLO_INSTANCE")
+
+      described_class.load
+
+      expect(ENV["BRIVLO_INSTANCE"]).to eq(File.basename(Dir.pwd))
+    ensure
+      ENV.delete("BRIVLO_INSTANCE")
+    end
+
+    it "does not override BRIVLO_INSTANCE if already set" do
+      allow(File).to receive(:exist?).and_return(false)
+      ENV["BRIVLO_INSTANCE"] = "explicit-instance"
+
+      described_class.load
+
+      expect(ENV["BRIVLO_INSTANCE"]).to eq("explicit-instance")
+    ensure
+      ENV.delete("BRIVLO_INSTANCE")
+    end
   end
 
   describe ".fetch" do

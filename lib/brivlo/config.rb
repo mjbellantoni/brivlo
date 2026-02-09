@@ -18,6 +18,8 @@ module Brivlo
         ENV[key] ||= value.to_s
       end
 
+      ENV["BRIVLO_INSTANCE"] ||= File.basename(Dir.pwd)
+
       file_config
     end
 

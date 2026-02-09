@@ -16,7 +16,7 @@ meta = {}
 parser = OptionParser.new do |opts|
   opts.banner = "Usage: brivlo_event <event> [options]"
 
-  opts.on("--instance INSTANCE", "Instance name (e.g. wt-a)") { |v| options[:instance] = v }
+  opts.on("--instance INSTANCE", "Instance name") { |v| options[:instance] = v }
   opts.on("--host HOST", "Host name") { |v| options[:host] = v }
   opts.on("--card CARD", "Card/ticket number") { |v| options[:card] = v }
   opts.on("--skill SKILL", "Skill name") { |v| options[:skill] = v }
@@ -37,8 +37,8 @@ unless event
   exit 1
 end
 
-unless options[:instance] && options[:host]
-  warn "Error: instance and host are required (via --instance/--host or BRIVLO_INSTANCE/BRIVLO_HOST)"
+unless options[:host]
+  warn "Error: host is required (via --host or BRIVLO_HOST)"
   warn parser.help
   exit 1
 end
