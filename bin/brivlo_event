@@ -7,7 +7,10 @@ require "brivlo/client"
 
 Brivlo::Config.load
 
-options = {}
+options = {
+  instance: Brivlo::Config.fetch("BRIVLO_INSTANCE"),
+  host: Brivlo::Config.fetch("BRIVLO_HOST")
+}
 meta = {}
 
 parser = OptionParser.new do |opts|
@@ -35,7 +38,7 @@ unless event
 end
 
 unless options[:instance] && options[:host]
-  warn "Error: --instance and --host are required"
+  warn "Error: instance and host are required (via --instance/--host or BRIVLO_INSTANCE/BRIVLO_HOST)"
   warn parser.help
   exit 1
 end
