@@ -103,6 +103,11 @@ module Brivlo
       end
       instances.sort_by! { |i| [i[:status] == "waiting" ? 0 : 1, -Time.parse(i[:ts]).to_f] }
 
+      content_type :html
+      erb :board, locals: { instances: instances }, layout: :layout
+    end
+
+    get "/wait_reasons" do
       wait_reasons = @db[:events]
                      .where(Sequel.like(:event, "wait.%"))
                      .select_group(:event, :tool, :summary)
@@ -112,7 +117,7 @@ module Brivlo
                      .all
 
       content_type :html
-      erb :board, locals: { instances: instances, wait_reasons: wait_reasons }, layout: :layout
+      erb :wait_reasons, locals: { wait_reasons: wait_reasons }, layout: :layout
     end
 
     get "/board/:instance" do

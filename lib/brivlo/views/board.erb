@@ -28,26 +28,4 @@
   </tbody>
 </table>
 
-<h2>Top Wait Reasons</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Reason</th>
-      <th>Tool</th>
-      <th>Summary</th>
-      <th>Count</th>
-      <th>Last Seen</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% wait_reasons.each do |wr| %>
-      <tr>
-        <td><%= wr[:event] %></td>
-        <td><%= wr[:tool] || "—" %></td>
-        <td><%= wr[:summary] || "—" %></td>
-        <td><%= wr[:count] %></td>
-        <td><%= relative_time(wr[:last_seen]) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<p><a href="/wait_reasons">Top Wait Reasons</a></p>

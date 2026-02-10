@@ -220,24 +220,46 @@ RSpec.describe Brivlo::Server do
       expect(last_response.body).to include('href="/board/wt-a"')
     end
 
-    describe "top wait reasons" do
-      it "shows wait reasons grouped by event and tool" do
-        3.times { insert_event(event: "wait.permission", tool: "Bash") }
-        insert_event(event: "wait.permission", tool: "Edit")
+    it "links to wait reasons page" do
+      get "/board"
 
-        get "/board"
+      expect(last_response.body).to include('href="/wait_reasons"')
+    end
+  end
 
-        expect(last_response.body).to include("Top Wait Reasons")
-        expect(last_response.body).to include("wait.permission")
-      end
+  describe "GET /wait_reasons" do
+    before { Brivlo::Database.setup(db) }
 
-      it "shows counts for each wait reason" do
-        3.times { insert_event(event: "wait.permission", tool: "Bash") }
+    let(:now) { Time.now.utc }
 
-        get "/board"
+    def insert_event(overrides = {})
+      defaults = {
+        event_id: SecureRandom.uuid,
+        ts: now.iso8601,
+        event: "task.start",
+        instance: "wt-a",
+        host: "mjb-dev-01",
+        received_at: now.iso8601
+      }
+      db[:events].insert(defaults.merge(overrides))
+    end
 
-        expect(last_response.body).to include("3")
-      end
+    it "shows wait reasons grouped by event and tool" do
+      3.times { insert_event(event: "wait.permission", tool: "Bash") }
+      insert_event(event: "wait.permission", tool: "Edit")
+
+      get "/wait_reasons"
+
+      expect(last_response.body).to include("Top Wait Reasons")
+      expect(last_response.body).to include("wait.permission")
+    end
+
+    it "shows counts for each wait reason" do
+      3.times { insert_event(event: "wait.permission", tool: "Bash") }
+
+      get "/wait_reasons"
+
+      expect(last_response.body).to include("3")
     end
   end
 
