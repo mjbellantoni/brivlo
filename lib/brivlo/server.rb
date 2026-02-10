@@ -74,11 +74,17 @@ module Brivlo
       existing = @db[:events].where(event_id: fields[:event_id]).first
       if existing
         status 200
+        "ok"
       else
-        @db[:events].insert(fields)
-        status 201
+        begin
+          @db[:events].insert(fields)
+          status 201
+          "ok"
+        rescue Sequel::NotNullConstraintViolation => e
+          status 422
+          { error: e.message }.to_json
+        end
       end
-      "ok"
     end
 
     get "/board" do

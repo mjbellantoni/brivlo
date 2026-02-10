@@ -82,6 +82,17 @@ RSpec.describe Brivlo::Server do
       expect(db[:events].count).to eq(1)
     end
 
+    it "returns 422 when required fields are missing" do
+      incomplete_event = { event_id: "uuid-456" }.to_json
+
+      post "/events", incomplete_event,
+           "CONTENT_TYPE" => "application/json",
+           "HTTP_AUTHORIZATION" => "Bearer #{valid_token}"
+
+      expect(last_response.status).to eq(422)
+      expect(db[:events].count).to eq(0)
+    end
+
     it "stores all event fields" do
       event_with_meta = JSON.parse(valid_event).merge("meta" => { "foo" => "bar" }.to_json).to_json
 
