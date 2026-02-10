@@ -92,8 +92,12 @@ module Brivlo
              .select_group(:instance)
              .select_append { max(ts).as(latest_ts) }
       instances = rows.map do |row|
+        window_start = (Time.parse(row[:latest_ts]) - 10).utc.iso8601
+        tool_rank = Sequel.case({ { tool: nil } => 1 }, 0)
         latest = @db[:events]
-                 .where(instance: row[:instance], ts: row[:latest_ts])
+                 .where(instance: row[:instance])
+                 .where(ts: window_start..row[:latest_ts])
+                 .order(tool_rank, Sequel.desc(:ts))
                  .first
         latest.merge(status: instance_status(latest[:event]))
       end

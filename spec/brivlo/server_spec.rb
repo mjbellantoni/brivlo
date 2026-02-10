@@ -164,6 +164,26 @@ RSpec.describe Brivlo::Server do
       expect(last_response.body).to include("active")
     end
 
+    it "prefers event with tool over null-tool duplicate within 10s" do
+      insert_event(
+        instance: "wt-b", event: "wait.permission",
+        tool: "Bash", summary: "Bash: bin/rails stats",
+        ts: (now - 6).iso8601
+      )
+      insert_event(
+        instance: "wt-b", event: "wait.permission",
+        tool: nil, summary: "Claude needs your permission to use Bash",
+        ts: now.iso8601
+      )
+
+      get "/board"
+
+      body = last_response.body
+      instances_section = body[body.index("Instances")..body.index("Top Wait Reasons")]
+      expect(instances_section).to include("Bash: bin/rails stats")
+      expect(instances_section).not_to include("Claude needs your permission")
+    end
+
     it "uses the latest event per instance for status" do
       insert_event(instance: "wt-a", event: "wait.permission", ts: (now - 60).iso8601)
       insert_event(instance: "wt-a", event: "task.start", ts: now.iso8601)
