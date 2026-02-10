@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "socket"
 require "yaml"
 
 module Brivlo
@@ -19,8 +20,13 @@ module Brivlo
       end
 
       ENV["BRIVLO_INSTANCE"] ||= File.basename(Dir.pwd)
+      ENV["BRIVLO_HOST"] ||= sanitize_hostname(Socket.gethostname)
 
       file_config
+    end
+
+    def self.sanitize_hostname(name)
+      name.end_with?(".local") ? "local" : name
     end
 
     def self.fetch(key, default = nil)

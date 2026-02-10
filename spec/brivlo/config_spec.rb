@@ -46,6 +46,41 @@ RSpec.describe Brivlo::Config do
       ENV.delete("BRIVLO_INSTANCE")
     end
 
+    it "sets BRIVLO_HOST from Socket.gethostname" do
+      allow(File).to receive(:exist?).and_return(false)
+      allow(Socket).to receive(:gethostname).and_return("build-server-01")
+      ENV.delete("BRIVLO_HOST")
+
+      described_class.load
+
+      expect(ENV["BRIVLO_HOST"]).to eq("build-server-01")
+    ensure
+      ENV.delete("BRIVLO_HOST")
+    end
+
+    it "sanitizes .local hostnames to just 'local'" do
+      allow(File).to receive(:exist?).and_return(false)
+      allow(Socket).to receive(:gethostname).and_return("Matthews-MacBook-Pro-2.local")
+      ENV.delete("BRIVLO_HOST")
+
+      described_class.load
+
+      expect(ENV["BRIVLO_HOST"]).to eq("local")
+    ensure
+      ENV.delete("BRIVLO_HOST")
+    end
+
+    it "does not override BRIVLO_HOST if already set" do
+      allow(File).to receive(:exist?).and_return(false)
+      ENV["BRIVLO_HOST"] = "explicit-host"
+
+      described_class.load
+
+      expect(ENV["BRIVLO_HOST"]).to eq("explicit-host")
+    ensure
+      ENV.delete("BRIVLO_HOST")
+    end
+
     it "does not override BRIVLO_INSTANCE if already set" do
       allow(File).to receive(:exist?).and_return(false)
       ENV["BRIVLO_INSTANCE"] = "explicit-instance"
