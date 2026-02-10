@@ -1,4 +1,11 @@
 <h2>Instances</h2>
+<p>
+  <% if show_all %>
+    <a href="/board">Hide dismissed</a>
+  <% else %>
+    <a href="/board?all=1">Show all</a>
+  <% end %>
+</p>
 <table>
   <thead>
     <tr>
@@ -10,6 +17,7 @@
       <th>Tool</th>
       <th>Summary</th>
       <th>Last Seen</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -23,6 +31,11 @@
         <td><%= inst[:tool] %></td>
         <td><%= inst[:summary] %></td>
         <td><%= relative_time(inst[:ts]) %></td>
+        <td>
+          <form method="post" action="/board/<%= inst[:instance] %>/dismiss">
+            <button type="submit">Dismiss</button>
+          </form>
+        </td>
       </tr>
     <% end %>
   </tbody>

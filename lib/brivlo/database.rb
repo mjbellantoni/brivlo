@@ -19,6 +19,11 @@ module Brivlo
         String :meta
         String :received_at, null: false
       end
+
+      db.create_table?(:dismissed_instances) do
+        String :instance, primary_key: true
+        String :dismissed_at, null: false
+      end
     end
 
     def self.connect(path = nil)

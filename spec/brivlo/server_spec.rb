@@ -225,6 +225,79 @@ RSpec.describe Brivlo::Server do
 
       expect(last_response.body).to include('href="/wait_reasons"')
     end
+
+    it "hides dismissed instances from the board" do
+      insert_event(instance: "wt-a", event: "task.start", ts: (now - 60).iso8601)
+      db[:dismissed_instances].insert(instance: "wt-a", dismissed_at: now.iso8601)
+
+      get "/board"
+
+      expect(last_response.body).not_to include("wt-a")
+    end
+
+    it "shows dismissed instance when a new event arrives after dismiss" do
+      dismiss_time = (now - 30).iso8601
+      db[:dismissed_instances].insert(instance: "wt-a", dismissed_at: dismiss_time)
+      insert_event(instance: "wt-a", event: "task.start", ts: now.iso8601)
+
+      get "/board"
+
+      expect(last_response.body).to include("wt-a")
+    end
+
+    it "shows dismissed instances with ?all=1" do
+      insert_event(instance: "wt-a", event: "task.start", ts: (now - 60).iso8601)
+      db[:dismissed_instances].insert(instance: "wt-a", dismissed_at: now.iso8601)
+
+      get "/board?all=1"
+
+      expect(last_response.body).to include("wt-a")
+    end
+
+    it "includes a dismiss form in each instance row" do
+      insert_event(instance: "wt-a", event: "task.start")
+
+      get "/board"
+
+      expect(last_response.body).to include('action="/board/wt-a/dismiss"')
+      expect(last_response.body).to include("Dismiss")
+    end
+
+    it "shows toggle links for filtered and unfiltered views" do
+      get "/board"
+      expect(last_response.body).to include('href="/board?all=1"')
+      expect(last_response.body).to include("Show all")
+
+      get "/board?all=1"
+      expect(last_response.body).to include('href="/board"')
+      expect(last_response.body).to include("Hide dismissed")
+    end
+  end
+
+  describe "POST /board/:instance/dismiss" do
+    before { Brivlo::Database.setup(db) }
+
+    it "creates a dismissed_instances record and redirects to /board" do
+      post "/board/wt-a/dismiss"
+
+      expect(last_response).to be_redirect
+      follow_redirect!
+      expect(last_request.path).to eq("/board")
+
+      row = db[:dismissed_instances].where(instance: "wt-a").first
+      expect(row).not_to be_nil
+      expect(row[:dismissed_at]).not_to be_nil
+    end
+
+    it "updates the timestamp on re-dismiss (upsert)" do
+      db[:dismissed_instances].insert(instance: "wt-a", dismissed_at: "2020-01-01T00:00:00Z")
+
+      post "/board/wt-a/dismiss"
+
+      row = db[:dismissed_instances].where(instance: "wt-a").first
+      expect(row[:dismissed_at]).not_to eq("2020-01-01T00:00:00Z")
+      expect(db[:dismissed_instances].where(instance: "wt-a").count).to eq(1)
+    end
   end
 
   describe "GET /wait_reasons" do

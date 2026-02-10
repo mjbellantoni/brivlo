@@ -87,6 +87,14 @@ module Brivlo
       end
     end
 
+    post "/board/:instance/dismiss" do
+      now = Time.now.utc.iso8601
+      @db[:dismissed_instances]
+        .insert_conflict(target: :instance, update: { dismissed_at: now })
+        .insert(instance: params[:instance], dismissed_at: now)
+      redirect "/board"
+    end
+
     get "/board" do
       rows = @db[:events]
              .select_group(:instance)
@@ -99,12 +107,19 @@ module Brivlo
                  .where(ts: window_start..row[:latest_ts])
                  .order(tool_rank, Sequel.desc(:ts))
                  .first
-        latest.merge(status: instance_status(latest[:event]))
+        latest.merge(status: instance_status(latest[:event]), latest_ts: row[:latest_ts])
       end
+
+      show_all = params[:all]
+      unless show_all
+        dismissed = @db[:dismissed_instances].to_hash(:instance, :dismissed_at)
+        instances.reject! { |i| dismissed[i[:instance]] && dismissed[i[:instance]] >= i[:latest_ts] }
+      end
+
       instances.sort_by! { |i| [i[:status] == "waiting" ? 0 : 1, -Time.parse(i[:ts]).to_f] }
 
       content_type :html
-      erb :board, locals: { instances: instances }, layout: :layout
+      erb :board, locals: { instances: instances, show_all: show_all }, layout: :layout
     end
 
     get "/wait_reasons" do
