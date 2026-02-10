@@ -68,12 +68,16 @@ RSpec.describe Brivlo::Server do
       expect(db[:events].first[:event_id]).to eq("uuid-123")
     end
 
-    it "deduplicates by event_id" do
-      2.times do
-        post "/events", valid_event,
-             "CONTENT_TYPE" => "application/json",
-             "HTTP_AUTHORIZATION" => "Bearer #{valid_token}"
-      end
+    it "deduplicates by event_id and returns 200" do
+      post "/events", valid_event,
+           "CONTENT_TYPE" => "application/json",
+           "HTTP_AUTHORIZATION" => "Bearer #{valid_token}"
+      expect(last_response.status).to eq(201)
+
+      post "/events", valid_event,
+           "CONTENT_TYPE" => "application/json",
+           "HTTP_AUTHORIZATION" => "Bearer #{valid_token}"
+      expect(last_response.status).to eq(200)
 
       expect(db[:events].count).to eq(1)
     end

@@ -71,8 +71,13 @@ module Brivlo
         received_at: Time.now.utc.iso8601
       }
 
-      @db[:events].insert_ignore.insert(fields)
-      status 201
+      existing = @db[:events].where(event_id: fields[:event_id]).first
+      if existing
+        status 200
+      else
+        @db[:events].insert(fields)
+        status 201
+      end
       "ok"
     end
 
