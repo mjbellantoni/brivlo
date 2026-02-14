@@ -3,6 +3,7 @@
 require "json"
 require "time"
 require "sinatra/base"
+require_relative "card_resolver"
 require_relative "database"
 
 module Brivlo
@@ -78,6 +79,7 @@ module Brivlo
       else
         begin
           @db[:events].insert(fields)
+          process_card_tracking(fields[:instance], fields[:summary])
           status 201
           "ok"
         rescue Sequel::NotNullConstraintViolation => e
@@ -146,6 +148,27 @@ module Brivlo
 
       content_type :html
       erb :instance, locals: { instance: instance_name, events: events }, layout: :layout
+    end
+
+    def process_card_tracking(instance, summary)
+      if (ref = CardResolver.extract_card_ref(summary))
+        upsert_instance_card(instance, ref)
+      elsif CardResolver.extract_done_ref(summary)
+        @db[:instance_cards].where(instance: instance).delete
+      end
+    end
+
+    def upsert_instance_card(instance, ref)
+      trello_cli_path = ENV.fetch("BRIVLO_TRELLO_CLI", nil)
+      resolved = CardResolver.resolve(ref, trello_cli_path: trello_cli_path)
+      return unless resolved
+
+      now = Time.now.utc.iso8601
+      values = { card_ref: ref, card_title: resolved[:card_title],
+                 card_url: resolved[:card_url], set_at: now }
+      @db[:instance_cards]
+        .insert_conflict(target: :instance, update: values)
+        .insert(values.merge(instance: instance))
     end
   end
 end

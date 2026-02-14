@@ -5,6 +5,7 @@ require "json"
 require "securerandom"
 require "rack/test"
 require "brivlo/server"
+require "brivlo/card_resolver"
 
 RSpec.describe Brivlo::Server do
   include Rack::Test::Methods
@@ -108,6 +109,85 @@ RSpec.describe Brivlo::Server do
       expect(stored[:tool]).to eq("Bash")
       expect(stored[:summary]).to eq("Needs approval")
       expect(stored[:received_at]).not_to be_nil
+    end
+  end
+
+  describe "POST /events card tracking" do
+    let(:valid_token) { "test-secret-token" }
+
+    before do
+      Brivlo::Database.setup(db)
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("BRIVLO_TOKEN", nil).and_return(valid_token)
+    end
+
+    def post_event(overrides = {}) # rubocop:disable Metrics/MethodLength
+      event = {
+        event_id: SecureRandom.uuid,
+        ts: Time.now.utc.iso8601,
+        event: "tool.invoke",
+        instance: "wt-a",
+        host: "mjb-dev-01",
+        tool: "Bash"
+      }.merge(overrides)
+
+      post "/events", event.to_json,
+           "CONTENT_TYPE" => "application/json",
+           "HTTP_AUTHORIZATION" => "Bearer #{valid_token}"
+    end
+
+    it "sets instance card when summary matches bin/trello card show" do
+      allow(Brivlo::CardResolver).to receive(:resolve)
+        .with("#42", trello_cli_path: nil)
+        .and_return({ card_title: "Fix login bug", card_url: "https://trello.com/c/abc123" })
+
+      post_event(summary: "bin/trello card show #42")
+
+      row = db[:instance_cards].where(instance: "wt-a").first
+      expect(row[:card_ref]).to eq("#42")
+      expect(row[:card_title]).to eq("Fix login bug")
+      expect(row[:card_url]).to eq("https://trello.com/c/abc123")
+    end
+
+    it "replaces existing card on new card show" do
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#1", card_title: "Old",
+        card_url: "https://trello.com/c/old", set_at: Time.now.utc.iso8601
+      )
+
+      allow(Brivlo::CardResolver).to receive(:resolve)
+        .with("#99", trello_cli_path: nil)
+        .and_return({ card_title: "New card", card_url: "https://trello.com/c/new" })
+
+      post_event(summary: "bin/trello card show #99")
+
+      expect(db[:instance_cards].where(instance: "wt-a").count).to eq(1)
+      expect(db[:instance_cards].first[:card_title]).to eq("New card")
+    end
+
+    it "does not set card when resolver returns nil" do
+      allow(Brivlo::CardResolver).to receive(:resolve).and_return(nil)
+
+      post_event(summary: "bin/trello card show #42")
+
+      expect(db[:instance_cards].count).to eq(0)
+    end
+
+    it "clears instance card when summary matches Done move" do
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#42", card_title: "Fix bug",
+        card_url: "https://trello.com/c/abc123", set_at: Time.now.utc.iso8601
+      )
+
+      post_event(summary: 'bin/trello card move #42 "Done/Committed"')
+
+      expect(db[:instance_cards].where(instance: "wt-a").count).to eq(0)
+    end
+
+    it "ignores non-trello bash summaries" do
+      post_event(summary: "bundle exec rspec")
+
+      expect(db[:instance_cards].count).to eq(0)
     end
   end
 
