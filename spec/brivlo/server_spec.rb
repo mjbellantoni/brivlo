@@ -352,6 +352,43 @@ RSpec.describe Brivlo::Server do
       expect(last_response.body).to include('href="/board"')
       expect(last_response.body).to include("Hide dismissed")
     end
+
+    it "shows card title as a link when instance has a card" do
+      insert_event(instance: "wt-a", event: "task.start")
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#42", card_title: "Fix login bug",
+        card_url: "https://trello.com/c/abc123", set_at: now.iso8601
+      )
+
+      get "/board"
+
+      expect(last_response.body).to include('href="https://trello.com/c/abc123"')
+      expect(last_response.body).to include("Fix login bug")
+    end
+
+    it "shows empty card cell when instance has no card" do
+      insert_event(instance: "wt-a", event: "task.start")
+
+      get "/board"
+
+      body = last_response.body
+      # The Card column header exists but the cell is empty
+      expect(body).to include("<th>Card</th>")
+    end
+
+    it "truncates long card titles to 40 characters" do
+      insert_event(instance: "wt-a", event: "task.start")
+      long_title = "A" * 50
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#42", card_title: long_title,
+        card_url: "https://trello.com/c/abc123", set_at: now.iso8601
+      )
+
+      get "/board"
+
+      expect(last_response.body).to include("#{"A" * 40}...")
+      expect(last_response.body).not_to include("A" * 50)
+    end
   end
 
   describe "POST /board/:instance/dismiss" do

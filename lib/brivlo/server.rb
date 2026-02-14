@@ -109,7 +109,13 @@ module Brivlo
                  .where(ts: window_start..row[:latest_ts])
                  .order(tool_rank, Sequel.desc(:ts))
                  .first
-        latest.merge(status: instance_status(latest[:event]), latest_ts: row[:latest_ts])
+        card = @db[:instance_cards].where(instance: row[:instance]).first
+        latest.merge(
+          status: instance_status(latest[:event]),
+          latest_ts: row[:latest_ts],
+          card_title: card&.dig(:card_title),
+          card_url: card&.dig(:card_url)
+        )
       end
 
       show_all = params[:all]
