@@ -97,6 +97,11 @@ module Brivlo
       redirect "/board"
     end
 
+    post "/board/:instance/clear_card" do
+      @db[:instance_cards].where(instance: params[:instance]).delete
+      redirect "/board"
+    end
+
     get "/board" do
       rows = @db[:events]
              .select_group(:instance)

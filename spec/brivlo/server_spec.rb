@@ -389,6 +389,18 @@ RSpec.describe Brivlo::Server do
       expect(last_response.body).to include("#{"A" * 40}...")
       expect(last_response.body).not_to include("A" * 50)
     end
+
+    it "includes a clear card button when instance has a card" do
+      insert_event(instance: "wt-a", event: "task.start")
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#42", card_title: "Fix bug",
+        card_url: "https://trello.com/c/abc123", set_at: now.iso8601
+      )
+
+      get "/board"
+
+      expect(last_response.body).to include('action="/board/wt-a/clear_card"')
+    end
   end
 
   describe "POST /board/:instance/dismiss" do
@@ -414,6 +426,30 @@ RSpec.describe Brivlo::Server do
       row = db[:dismissed_instances].where(instance: "wt-a").first
       expect(row[:dismissed_at]).not_to eq("2020-01-01T00:00:00Z")
       expect(db[:dismissed_instances].where(instance: "wt-a").count).to eq(1)
+    end
+  end
+
+  describe "POST /board/:instance/clear_card" do
+    before { Brivlo::Database.setup(db) }
+
+    it "deletes the instance card and redirects to /board" do
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#42", card_title: "Fix bug",
+        card_url: "https://trello.com/c/abc123", set_at: Time.now.utc.iso8601
+      )
+
+      post "/board/wt-a/clear_card"
+
+      expect(last_response).to be_redirect
+      follow_redirect!
+      expect(last_request.path).to eq("/board")
+      expect(db[:instance_cards].where(instance: "wt-a").count).to eq(0)
+    end
+
+    it "succeeds even when no card exists" do
+      post "/board/wt-a/clear_card"
+
+      expect(last_response).to be_redirect
     end
   end
 

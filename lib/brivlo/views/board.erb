@@ -32,6 +32,9 @@
           <% if inst[:card_title] %>
             <% title = inst[:card_title].length > 40 ? "#{inst[:card_title][0, 40]}..." : inst[:card_title] %>
             <a href="<%= inst[:card_url] %>" target="_blank"><%= title %></a>
+            <form method="post" action="/board/<%= inst[:instance] %>/clear_card" style="display:inline">
+              <button type="submit" title="Clear card">&times;</button>
+            </form>
           <% end %>
         </td>
         <td><%= inst[:skill] %></td>
