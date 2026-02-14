@@ -26,5 +26,18 @@ RSpec.describe Brivlo::Database do
       columns = db.schema(:events).map(&:first)
       expect(columns).to eq(%i[event_id ts event instance host card skill tool summary meta received_at])
     end
+
+    it "creates the instance_cards table" do
+      described_class.setup(db)
+
+      expect(db.tables).to include(:instance_cards)
+    end
+
+    it "creates all expected instance_cards columns" do
+      described_class.setup(db)
+
+      columns = db.schema(:instance_cards).map(&:first)
+      expect(columns).to eq(%i[instance card_ref card_title card_url set_at])
+    end
   end
 end

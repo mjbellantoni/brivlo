@@ -5,7 +5,7 @@ require "sequel"
 module Brivlo
   # Creates and connects to the SQLite database used for event storage.
   module Database
-    def self.setup(db) # rubocop:disable Metrics/MethodLength
+    def self.setup(db) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       db.create_table?(:events) do
         String :event_id, primary_key: true
         String :ts, null: false
@@ -23,6 +23,14 @@ module Brivlo
       db.create_table?(:dismissed_instances) do
         String :instance, primary_key: true
         String :dismissed_at, null: false
+      end
+
+      db.create_table?(:instance_cards) do
+        String :instance, primary_key: true
+        String :card_ref, null: false
+        String :card_title, null: false
+        String :card_url, null: false
+        String :set_at, null: false
       end
     end
 
