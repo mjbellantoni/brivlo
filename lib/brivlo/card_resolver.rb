@@ -37,7 +37,7 @@ module Brivlo
     end
 
     def self.run_trello(ref, trello_cli_path: nil)
-      cmd = trello_cli_path || "bin/trello"
+      cmd = trello_cli_path || "trello"
       output = `#{cmd} card show #{ref} 2>/dev/null`
       $CHILD_STATUS.success? ? output : nil
     rescue StandardError
