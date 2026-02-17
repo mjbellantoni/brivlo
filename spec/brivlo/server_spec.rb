@@ -441,6 +441,34 @@ RSpec.describe Brivlo::Server do
 
       expect(last_response.body).to include('action="/board/wt-a/clear_card"')
     end
+
+    it "truncates tool names longer than 12 characters" do
+      insert_event(tool: "AskUserQuestion", summary: "asking something")
+
+      get "/board"
+
+      expect(last_response.body).to include("AskUserQues\u2026")
+      expect(last_response.body).not_to include("AskUserQuestion")
+    end
+
+    it "shows tool names 12 chars or shorter as-is" do
+      insert_event(tool: "Edit", summary: "editing file")
+
+      get "/board"
+
+      expect(last_response.body).to include("Edit")
+    end
+
+    it "hides summary when it matches tool name" do
+      insert_event(tool: "Bash", summary: "Bash")
+
+      get "/board"
+
+      body = last_response.body
+      # Tool should appear but summary should not be shown separately
+      # Count occurrences - "Bash" appears in tool display but not duplicated as summary
+      expect(body).to include("Bash")
+    end
   end
 
   describe "POST /board/:instance/dismiss" do

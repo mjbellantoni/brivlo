@@ -43,6 +43,16 @@ module Brivlo
       def instance_status(event_name)
         event_name&.start_with?("wait.") ? "waiting" : "active"
       end
+
+      def truncate_tool(name)
+        return name unless name && name.length > 12
+        "#{name[0, 11]}\u2026"
+      end
+
+      def display_summary(tool, summary)
+        return nil if summary.nil? || summary == tool
+        summary
+      end
     end
 
     get "/" do
