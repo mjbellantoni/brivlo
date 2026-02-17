@@ -6,49 +6,39 @@
     <a href="/board?all=1">Show all</a>
   <% end %>
 </p>
-<table>
-  <thead>
-    <tr>
-      <th>Instance</th>
-      <th>Host</th>
-      <th>Status</th>
-      <th>Event</th>
-      <th>Card</th>
-      <th>Skill</th>
-      <th>Tool</th>
-      <th>Summary</th>
-      <th>Last Seen</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% instances.each do |inst| %>
-      <tr class="<%= inst[:status] %>">
-        <td><a href="/board/<%= inst[:instance] %>"><%= inst[:instance] %></a></td>
-        <td><%= inst[:host] %></td>
-        <td><%= inst[:status] %></td>
-        <td><%= inst[:event] %></td>
-        <td>
-          <% if inst[:card_title] %>
-            <% title = inst[:card_title].length > 40 ? "#{inst[:card_title][0, 40]}..." : inst[:card_title] %>
-            <a href="<%= inst[:card_url] %>" target="_blank"><%= title %></a>
-            <form method="post" action="/board/<%= inst[:instance] %>/clear_card" style="display:inline">
-              <button type="submit" title="Clear card">&times;</button>
-            </form>
-          <% end %>
-        </td>
-        <td><%= inst[:skill] %></td>
-        <td><%= inst[:tool] %></td>
-        <td><%= inst[:summary] %></td>
-        <td><%= relative_time(inst[:ts]) %></td>
-        <td>
-          <form method="post" action="/board/<%= inst[:instance] %>/dismiss">
-            <button type="submit">Dismiss</button>
+
+<div class="board">
+  <% instances.each do |inst| %>
+    <div class="instance-card <%= inst[:status] %>">
+      <div class="card-row primary">
+        <span class="instance-name"><a href="/board/<%= inst[:instance] %>"><%= inst[:instance] %></a></span>
+        <span class="status-event"><%= inst[:status] %> &middot; <%= inst[:event] %></span>
+        <span class="last-seen"><%= relative_time(inst[:ts]) %></span>
+        <form method="post" action="/board/<%= inst[:instance] %>/dismiss" class="inline-form">
+          <button type="submit" class="btn-dismiss">Dismiss</button>
+        </form>
+      </div>
+      <div class="card-row secondary">
+        <span class="host"><%= inst[:host] %></span>
+        <span class="details">
+          <% if inst[:skill] %>Skill: <%= inst[:skill] %><% end %>
+          <% if inst[:skill] && inst[:tool] %> &middot; <% end %>
+          <% if inst[:tool] %>Tool: <%= truncate_tool(inst[:tool]) %><% end %>
+          <% if (ds = display_summary(inst[:tool], inst[:summary])) %> &middot; <%= ds %><% end %>
+        </span>
+        <% if inst[:card_title] %>
+          <form method="post" action="/board/<%= inst[:instance] %>/clear_card" class="inline-form clear-card-form">
+            <button type="submit" title="Clear card" class="btn-clear">&times;</button>
           </form>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+        <% end %>
+      </div>
+      <% if inst[:card_title] %>
+        <div class="card-row card-info">
+          <a href="<%= inst[:card_url] %>" target="_blank" class="card-link"><%= inst[:card_title] %></a>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
 
 <p><a href="/wait_reasons">Top Wait Reasons</a></p>

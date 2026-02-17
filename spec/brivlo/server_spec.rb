@@ -366,17 +366,15 @@ RSpec.describe Brivlo::Server do
       expect(last_response.body).to include("Fix login bug")
     end
 
-    it "shows empty card cell when instance has no card" do
+    it "shows no card row when instance has no card" do
       insert_event(instance: "wt-a", event: "task.start")
 
       get "/board"
 
-      body = last_response.body
-      # The Card column header exists but the cell is empty
-      expect(body).to include("<th>Card</th>")
+      expect(last_response.body).not_to include("card-link")
     end
 
-    it "truncates long card titles to 40 characters" do
+    it "shows full card title without truncation" do
       insert_event(instance: "wt-a", event: "task.start")
       long_title = "A" * 50
       db[:instance_cards].insert(
@@ -386,8 +384,7 @@ RSpec.describe Brivlo::Server do
 
       get "/board"
 
-      expect(last_response.body).to include("#{"A" * 40}...")
-      expect(last_response.body).not_to include("A" * 50)
+      expect(last_response.body).to include("A" * 50)
     end
 
     it "resolves pending card when instance has unresolved card show event" do
@@ -465,9 +462,13 @@ RSpec.describe Brivlo::Server do
       get "/board"
 
       body = last_response.body
-      # Tool should appear but summary should not be shown separately
-      # Count occurrences - "Bash" appears in tool display but not duplicated as summary
-      expect(body).to include("Bash")
+      # The template uses display_summary which returns nil when tool == summary
+      # So "Bash" should appear once as the tool but not again as a separate summary
+      # Look for the middot separator that would precede a displayed summary
+      details_match = body[/class="details">(.*?)<\/span>/m, 1]
+      expect(details_match).to include("Tool: Bash")
+      # There should be no middot+summary after "Tool: Bash" since summary was suppressed
+      expect(details_match).not_to match(/Tool: Bash.*&middot;/)
     end
   end
 
