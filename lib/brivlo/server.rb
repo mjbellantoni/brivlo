@@ -103,6 +103,7 @@ module Brivlo
     end
 
     get "/board" do
+      resolve_pending_cards
       rows = @db[:events]
              .select_group(:instance)
              .select_append { max(ts).as(latest_ts) }
@@ -159,6 +160,33 @@ module Brivlo
 
       content_type :html
       erb :instance, locals: { instance: instance_name, events: events }, layout: :layout
+    end
+
+    def resolve_pending_cards
+      tracked = @db[:instance_cards].select_map(:instance)
+
+      @db[:events]
+        .exclude(instance: tracked)
+        .where(Sequel.like(:summary, "bin/trello card show %"))
+        .select_group(:instance)
+        .each do |row|
+          show_event = @db[:events]
+                       .where(instance: row[:instance])
+                       .where(Sequel.like(:summary, "bin/trello card show %"))
+                       .order(Sequel.desc(:ts))
+                       .first
+
+          done_after = @db[:events]
+                       .where(instance: row[:instance])
+                       .where(Sequel.like(:summary, 'bin/trello card move %"Done/%'))
+                       .where { ts > show_event[:ts] }
+                       .any?
+
+          next if done_after
+
+          ref = CardResolver.extract_card_ref(show_event[:summary])
+          upsert_instance_card(row[:instance], ref) if ref
+        end
     end
 
     def process_card_tracking(instance, summary)

@@ -390,6 +390,46 @@ RSpec.describe Brivlo::Server do
       expect(last_response.body).not_to include("A" * 50)
     end
 
+    it "resolves pending card when instance has unresolved card show event" do
+      insert_event(instance: "wt-a", event: "tool.invoke",
+                   summary: "bin/trello card show #42")
+
+      allow(Brivlo::CardResolver).to receive(:resolve)
+        .with("#42", trello_cli_path: nil)
+        .and_return({ card_title: "Fix login bug", card_url: "https://trello.com/c/abc123" })
+
+      get "/board"
+
+      expect(last_response.body).to include("Fix login bug")
+      expect(db[:instance_cards].where(instance: "wt-a").count).to eq(1)
+    end
+
+    it "does not re-resolve card that was moved to done after show" do
+      insert_event(instance: "wt-a", event: "tool.invoke",
+                   summary: "bin/trello card show #42", ts: (now - 60).iso8601)
+      insert_event(instance: "wt-a", event: "tool.invoke",
+                   summary: 'bin/trello card move #42 "Done/Committed"', ts: now.iso8601)
+
+      expect(Brivlo::CardResolver).not_to receive(:resolve)
+
+      get "/board"
+
+      expect(db[:instance_cards].where(instance: "wt-a").count).to eq(0)
+    end
+
+    it "skips resolve when instance already has a card" do
+      insert_event(instance: "wt-a", event: "tool.invoke",
+                   summary: "bin/trello card show #42")
+      db[:instance_cards].insert(
+        instance: "wt-a", card_ref: "#42", card_title: "Already tracked",
+        card_url: "https://trello.com/c/abc123", set_at: now.iso8601
+      )
+
+      expect(Brivlo::CardResolver).not_to receive(:resolve)
+
+      get "/board"
+    end
+
     it "includes a clear card button when instance has a card" do
       insert_event(instance: "wt-a", event: "task.start")
       db[:instance_cards].insert(
