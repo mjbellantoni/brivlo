@@ -465,7 +465,7 @@ RSpec.describe Brivlo::Server do
       # The template uses display_summary which returns nil when tool == summary
       # So "Bash" should appear once as the tool but not again as a separate summary
       # Look for the middot separator that would precede a displayed summary
-      details_match = body[/class="details">(.*?)<\/span>/m, 1]
+      details_match = body[%r{class="details">(.*?)</span>}m, 1]
       expect(details_match).to include("Tool: Bash")
       # There should be no middot+summary after "Tool: Bash" since summary was suppressed
       expect(details_match).not_to match(/Tool: Bash.*&middot;/)

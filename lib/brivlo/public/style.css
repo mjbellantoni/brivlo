@@ -45,6 +45,133 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Board card list */
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 1.5rem;
+}
+
+.instance-card {
+  border-bottom: 1px solid #2a2a4a;
+  padding: 0.4rem 0.75rem;
+}
+
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-row.primary {
+  font-size: 0.9rem;
+}
+
+.card-row.secondary {
+  font-size: 0.8rem;
+  color: #8a8a9a;
+  margin-top: 0.15rem;
+}
+
+.card-row.card-info {
+  margin-top: 0.2rem;
+  min-width: 0;
+}
+
+.instance-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-event {
+  white-space: nowrap;
+}
+
+.last-seen {
+  white-space: nowrap;
+  color: #8a8a9a;
+  margin-left: auto;
+}
+
+.host {
+  white-space: nowrap;
+}
+
+.details {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-link {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+}
+
+.inline-form {
+  display: inline;
+  margin: 0;
+}
+
+.clear-card-form {
+  margin-left: auto;
+}
+
+.btn-dismiss {
+  background: none;
+  border: 1px solid #3a3a5a;
+  color: #8a8a9a;
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.btn-dismiss:hover {
+  border-color: #e94560;
+  color: #e94560;
+}
+
+.btn-clear {
+  background: none;
+  border: none;
+  color: #8a8a9a;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+}
+
+.btn-clear:hover {
+  color: #e94560;
+}
+
+/* Status colors */
+.instance-card.waiting {
+  background: #2a1a1a;
+}
+
+.instance-card.waiting .card-row.primary {
+  color: #e94560;
+  font-weight: 600;
+}
+
+.instance-card.waiting .card-row.primary a {
+  color: #e94560;
+}
+
+.instance-card.active .card-row.primary {
+  color: #4ade80;
+}
+
+.instance-card.active .card-row.primary a {
+  color: #4ade80;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -65,19 +192,6 @@ td {
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid #2a2a4a;
   font-size: 0.9rem;
-}
-
-tr.waiting {
-  background: #2a1a1a;
-}
-
-tr.waiting td {
-  color: #e94560;
-  font-weight: 600;
-}
-
-tr.active td {
-  color: #4ade80;
 }
 
 p {
