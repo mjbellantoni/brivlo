@@ -12,6 +12,7 @@
     <div class="instance-card <%= inst[:status] %>">
       <div class="card-row primary">
         <span class="instance-name"><a href="/board/<%= inst[:instance] %>"><%= inst[:instance] %></a></span>
+        <span class="host"><%= inst[:host] %></span>
         <span class="status-event"><%= inst[:status] %> &middot; <%= inst[:event] %></span>
         <span class="last-seen"><%= relative_time(inst[:ts]) %></span>
         <form method="post" action="/board/<%= inst[:instance] %>/dismiss" class="inline-form">
@@ -19,7 +20,9 @@
         </form>
       </div>
       <div class="card-row secondary">
-        <span class="host"><%= inst[:host] %></span>
+        <% if inst[:card_title] %>
+          <a href="<%= inst[:card_url] %>" target="_blank" class="card-link"><%= inst[:card_title] %></a>
+        <% end %>
         <span class="details">
           <% if inst[:skill] %>Skill: <%= inst[:skill] %><% end %>
           <% if inst[:skill] && inst[:tool] %> &middot; <% end %>
@@ -32,11 +35,6 @@
           </form>
         <% end %>
       </div>
-      <% if inst[:card_title] %>
-        <div class="card-row card-info">
-          <a href="<%= inst[:card_url] %>" target="_blank" class="card-link"><%= inst[:card_title] %></a>
-        </div>
-      <% end %>
     </div>
   <% end %>
 </div>

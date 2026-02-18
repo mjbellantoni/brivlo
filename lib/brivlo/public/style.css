@@ -62,6 +62,8 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  height: 1.5rem;
+  overflow: hidden;
 }
 
 .card-row.primary {
@@ -72,11 +74,6 @@ a:hover {
   font-size: 0.8rem;
   color: #8a8a9a;
   margin-top: 0.15rem;
-}
-
-.card-row.card-info {
-  margin-top: 0.2rem;
-  min-width: 0;
 }
 
 .instance-name {
@@ -102,14 +99,15 @@ a:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 0 1 auto;
 }
 
 .card-link {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block;
-  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .inline-form {
